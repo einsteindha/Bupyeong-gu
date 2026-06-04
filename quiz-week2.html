@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>뉴스에 속지 않는 주식 공부 — 실전 퀴즈 | 부평구 재무교육</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream:   #FAF7F2;
+    --sand:    #E7E2D8;
+    --terra:   #B85042;
+    --terra-d: #8C3830;
+    --teal:    #5C8A8A;
+    --brown:   #2C1A0E;
+    --mid:     #5A4A3A;
+    --light:   #8C7B6B;
+    --gold:    #E8A87C;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    color: var(--brown);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      radial-gradient(circle at 10% 15%, rgba(184,80,66,.06) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(92,138,138,.07) 0%, transparent 40%);
+  }
+
+  .page { position: relative; z-index: 1; max-width: 600px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+
+  /* ── 뒤로 가기 ── */
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--light); text-decoration: none;
+    margin-bottom: 1.75rem; transition: color .15s;
+  }
+  .back-link:hover { color: var(--terra); }
+  .back-link svg { width: 16px; height: 16px; }
+
+  /* ── 퀴즈 헤더 ── */
+  .quiz-header { margin-bottom: 1.75rem; }
+  .quiz-tag {
+    display: inline-block; font-size: 11px; letter-spacing: .15em;
+    text-transform: uppercase; color: var(--terra);
+    border: 1px solid rgba(184,80,66,.3); padding: 4px 12px;
+    border-radius: 20px; margin-bottom: .75rem; font-weight: 500;
+  }
+  .quiz-header h1 {
+    font-family: 'Noto Serif KR', serif;
+    font-size: clamp(18px, 4.5vw, 24px); font-weight: 600;
+    line-height: 1.45; color: var(--brown); margin-bottom: .4rem;
+  }
+  .quiz-header p { font-size: 13px; color: var(--light); line-height: 1.7; }
+
+  /* ── 진행률 ── */
+  .prog-wrap { margin-bottom: 1.5rem; }
+  .prog-meta { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--light); margin-bottom: .45rem; }
+  .prog-bar { height: 5px; background: var(--sand); border-radius: 3px; overflow: hidden; }
+  .prog-fill { height: 100%; background: var(--terra); border-radius: 3px; transition: width .45s ease; }
+
+  /* ── 파트 뱃지 ── */
+  .part-badge {
+    display: inline-block; font-size: 11.5px; font-weight: 500;
+    padding: 4px 12px; border-radius: 20px; margin-bottom: .9rem;
+  }
+  .part-a { background: #E6F1FB; color: #0C447C; }
+  .part-b { background: #EAF3DE; color: #1A4D1A; }
+
+  /* ── 힌트 박스 ── */
+  .hint {
+    background: #fff;
+    border: 1px solid var(--sand);
+    border-left: 3px solid var(--gold);
+    border-radius: 10px;
+    padding: .9rem 1.1rem;
+    font-size: 13.5px; color: var(--mid);
+    line-height: 1.75; margin-bottom: 1.1rem;
+  }
+  .hint strong { color: var(--brown); font-weight: 500; }
+
+  /* ── 질문 ── */
+  .q-text {
+    font-size: 17px; font-weight: 500; color: var(--brown);
+    line-height: 1.6; margin-bottom: 1.2rem;
+  }
+
+  /* ── 선택지 ── */
+  .opts { display: flex; flex-direction: column; gap: .55rem; margin-bottom: 1rem; }
+  .opt {
+    width: 100%; text-align: left;
+    padding: .8rem 1.1rem;
+    border-radius: 10px;
+    border: 1px solid #DDD8D0;
+    background: #fff;
+    font-size: 14.5px; color: var(--brown);
+    cursor: pointer; line-height: 1.5;
+    transition: background .15s, border-color .15s, transform .1s;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .opt:hover:not(:disabled) { background: #F5F1EC; border-color: #C8C0B8; transform: translateX(3px); }
+  .opt.correct { background: #EAF3DE; border-color: #4A7C59; color: #173404; }
+  .opt.wrong   { background: #FCEBEB; border-color: #A32D2D; color: #501313; }
+  .opt.dim     { opacity: .38; }
+
+  /* ── 피드백 ── */
+  .feedback {
+    display: none; padding: .9rem 1.1rem; border-radius: 10px;
+    font-size: 13.5px; line-height: 1.7; margin-bottom: 1rem;
+  }
+  .feedback.show { display: block; }
+  .feedback.ok { background: #EAF3DE; border: 1px solid #4A7C59; color: #173404; }
+  .feedback.ng { background: #FCEBEB; border: 1px solid #A32D2D; color: #501313; }
+  .feedback strong { font-weight: 500; }
+
+  /* ── 다음 버튼 ── */
+  .next-btn {
+    width: 100%; padding: .82rem; border-radius: 10px;
+    border: 1px solid #DDD8D0; background: #F5F1EC;
+    font-size: 14.5px; font-weight: 500; cursor: pointer;
+    color: var(--brown); display: none; transition: background .15s;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .next-btn.show { display: block; }
+  .next-btn:hover { background: #EDE8E0; }
+
+  /* ── 결과 화면 ── */
+  .result { text-align: center; padding: 1.5rem 0 2rem; }
+  .score-ring {
+    width: 116px; height: 116px; border-radius: 50%;
+    border: 3px solid var(--terra); margin: 0 auto 1.2rem;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .score-num { font-family: 'Noto Serif KR', serif; font-size: 38px; font-weight: 600; color: var(--terra); line-height: 1; }
+  .score-denom { font-size: 13px; color: var(--light); margin-top: 2px; }
+  .grade {
+    display: inline-block; padding: .4rem 1.4rem; border-radius: 20px;
+    font-size: 15px; font-weight: 500; margin-bottom: .9rem;
+  }
+  .result-msg { font-size: 14px; color: var(--light); line-height: 1.75; margin-bottom: 1.5rem; max-width: 380px; margin-inline: auto; }
+  .action-row { display: flex; gap: .65rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2rem; }
+  .btn-retry {
+    padding: .7rem 1.6rem; border-radius: 10px;
+    border: 1px solid var(--terra); background: var(--terra);
+    color: #fff; font-size: 14px; cursor: pointer; font-weight: 500;
+    font-family: 'Noto Sans KR', sans-serif; transition: background .15s;
+  }
+  .btn-retry:hover { background: var(--terra-d); }
+  .btn-hub {
+    padding: .7rem 1.6rem; border-radius: 10px;
+    border: 1px solid #DDD8D0; background: #F5F1EC;
+    color: var(--brown); font-size: 14px; cursor: pointer; font-weight: 500;
+    font-family: 'Noto Sans KR', sans-serif; text-decoration: none;
+    display: inline-block; transition: background .15s;
+  }
+  .btn-hub:hover { background: #EDE8E0; }
+
+  /* ── 복습 목록 ── */
+  .review-title {
+    font-size: 13px; font-weight: 500; color: var(--light);
+    letter-spacing: .08em; margin-bottom: .75rem; text-align: left;
+  }
+  .review-list { text-align: left; }
+  .review-item {
+    padding: .75rem 1rem; border-radius: 10px;
+    margin-bottom: .45rem; font-size: 13px; line-height: 1.6; border: 1px solid;
+  }
+  .review-item.ok { background: #EAF3DE; border-color: #4A7C59; color: #173404; }
+  .review-item.ng { background: #FCEBEB; border-color: #A32D2D; color: #501313; }
+  .review-q { font-weight: 500; margin-bottom: .2rem; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- 뒤로 가기 -->
+  <a href="index.html" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    실습 허브로 돌아가기
+  </a>
+
+  <!-- 퀴즈 헤더 -->
+  <div class="quiz-header">
+    <div class="quiz-tag">2주차 심화 · 실전 퀴즈</div>
+    <h1>뉴스에 속지 않는 주식 공부</h1>
+    <p>기본적분석과 기술적분석의 핵심 용어를 10문제로 확인합니다.<br>힌트를 읽고 해당하는 개념을 선택하세요.</p>
+  </div>
+
+  <!-- 퀴즈 영역 -->
+  <div id="quiz-area">
+    <div class="prog-wrap">
+      <div class="prog-meta">
+        <span id="q-num">1 / 10</span>
+        <span id="q-part-text"></span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+    </div>
+    <div class="part-badge" id="part-badge"></div>
+    <div class="hint" id="hint-box"></div>
+    <p class="q-text" id="q-text"></p>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="next-btn">다음 문제 →</button>
+  </div>
+
+  <!-- 결과 영역 -->
+  <div id="result-area" style="display:none"></div>
+
+</div>
+
+<script>
+const QS = [
+  {part:"1부 기본적분석",
+   hint:"회사가 분기·연간 실적을 금융감독원에 공식 제출하는 서류입니다.\n<strong>손익계산서·재무상태표·현금흐름표</strong>로 구성되며,\ndart.fss.or.kr 또는 네이버 금융 '재무' 탭에서 무료로 볼 수 있습니다.",
+   q:"위 설명에 해당하는 것은 무엇인가요?",
+   opts:["신용등급보고서","재무제표","투자설명서","사업타당성분석서"],
+   ans:1,
+   exp:"<strong>재무제표</strong>는 회사가 공식 제출하는 성적표입니다. 손익계산서(얼마 벌었나), 재무상태표(자산·부채), 현금흐름표(실제 현금) 세 가지로 구성됩니다."},
+
+  {part:"1부 기본적분석",
+   hint:"'주가가 이익에 비해 몇 배인가'를 나타내는 지표입니다.\n<strong>주가 ÷ 주당순이익(EPS)</strong>으로 계산하며,\n낮을수록 이익 대비 주가가 저렴하다는 뜻입니다.\n반드시 같은 업종끼리 비교해야 합니다.",
+   q:"위 설명에 해당하는 지표는 무엇인가요?",
+   opts:["ROE","PBR","PER","EPS"],
+   ans:2,
+   exp:"<strong>PER(주가수익비율)</strong>은 주가 ÷ EPS입니다. 코스피 중앙값은 약 11.2배(2025년 결산 기준)이며, 업종마다 적정 PER이 달라 업종 평균과 비교하는 것이 중요합니다."},
+
+  {part:"1부 기본적분석",
+   hint:"'자기 돈으로 얼마나 효율적으로 이익을 내는가'를 보는 지표입니다.\n<strong>순이익 ÷ 자기자본 × 100</strong>으로 계산하며,\n10% 이상이면 양호, 15% 이상이면 우량 기업으로 봅니다.",
+   q:"위 설명에 해당하는 지표는 무엇인가요?",
+   opts:["PBR","EPS","PER","ROE"],
+   ans:3,
+   exp:"<strong>ROE(자기자본이익률)</strong>는 퀄리티팩터의 핵심 지표입니다. 부채를 많이 끼면 ROE가 높아 보일 수 있어 부채비율과 함께 확인해야 합니다."},
+
+  {part:"1부 기본적분석",
+   hint:"성장주 투자자가 즐겨 사용하는 지표로,\n<strong>PER ÷ EPS 성장률</strong>로 계산합니다.\n값이 1 이하이면 '성장성 대비 저평가'를 의미합니다.\n피터 린치가 즐겨 사용한 것으로 알려져 있습니다.",
+   q:"위 설명에 해당하는 지표는 무엇인가요?",
+   opts:["EPS","PEG","PBR","PCR"],
+   ans:1,
+   exp:"<strong>PEG(주가이익성장비율)</strong>는 PER ÷ EPS 성장률입니다. PER이 높아 보여도 성장률이 정당화하는지 확인할 수 있어 성장주 평가에 유용합니다."},
+
+  {part:"1부 기본적분석",
+   hint:"'회사 청산 시 주주에게 돌아오는 가치 대비 현재 주가가 몇 배인가'를 나타냅니다.\n<strong>주가 ÷ 주당순자산(BPS)</strong>으로 계산하며,\n1배 미만이면 청산가치보다 싸게 거래되는 상태입니다.",
+   q:"위 설명에 해당하는 지표는 무엇인가요?",
+   opts:["ROE","PER","PBR","EPS"],
+   ans:2,
+   exp:"<strong>PBR(주가순자산비율)</strong>은 주가 ÷ BPS입니다. PBR이 낮다고 무조건 좋은 건 아니며, 이익도 없고 성장도 없으면 낮게 유지될 수 있어 ROE와 함께 확인해야 합니다."},
+
+  {part:"2부 기술적분석",
+   hint:"주가 차트에서 캔들 하나는 4가지 가격 정보를 담습니다.\n시가, 고가, 저가, 그리고 <strong>장이 끝날 때의 가격</strong>.\n이 값이 시가보다 높으면 양봉(빨강), 낮으면 음봉(파랑)이 됩니다.",
+   q:"캔들의 4가지 구성 요소 중 '장이 끝날 때의 가격'은?",
+   opts:["기준가","종가","평균가","청산가"],
+   ans:1,
+   exp:"캔들은 <strong>시가·고가·저가·종가</strong> 네 가지로 구성됩니다. 몸통은 시가~종가 범위, 꼬리는 장중 최고가·최저가를 나타냅니다."},
+
+  {part:"2부 기술적분석",
+   hint:"주가의 <strong>'온도계'</strong>라고도 불리는 기술적 보조지표입니다.\n0~100 사이 값으로, <strong>과매수(과열)와 과매도 구간</strong>을 파악하는 데 활용합니다.\n상승폭 합계 ÷ (상승폭+하락폭 합계) × 100으로 계산합니다.",
+   q:"위 설명에 해당하는 보조지표는 무엇인가요?",
+   opts:["MACD","일목균형표","RSI","볼린저밴드"],
+   ans:2,
+   exp:"<strong>RSI(상대강도지수)</strong>는 주가의 온도계로 불립니다. 70 이상이면 과열, 30 이하면 과매도로 봅니다. 항상 이동평균선·거래량과 함께 확인해야 합니다."},
+
+  {part:"2부 기술적분석",
+   hint:"단기 이동평균선과 장기 이동평균선의 차이를 이용한 보조지표입니다.\n기본값은 <strong>12일 EMA − 26일 EMA</strong>로 계산합니다.\nMACD선이 시그널선을 위로 돌파하면 매수, 아래로 이탈하면 매도 신호입니다.",
+   q:"위 설명에 해당하는 보조지표는 무엇인가요?",
+   opts:["RSI","볼린저밴드","MACD","스토캐스틱"],
+   ans:2,
+   exp:"<strong>MACD</strong>는 이동평균의 수렴·발산을 이용한 추세 전환 지표입니다. 이동평균선보다 빠르게 신호를 잡지만 시차가 있어 맹신은 금물입니다."},
+
+  {part:"2부 기술적분석",
+   hint:"주가가 <strong>반복적으로 하락을 멈추는 가격대</strong>입니다.\n많은 투자자가 이 가격에 매수한 이력이 있어,\n주가가 다시 이 근처에 오면 매수 세력이 등장해 반등하는 경향이 있습니다.\n이동평균선도 이 역할을 하는 경우가 많습니다.",
+   q:"위 설명에 해당하는 개념은 무엇인가요?",
+   opts:["저항선","매물대","지지선","추세선"],
+   ans:2,
+   exp:"<strong>지지선</strong>은 주가가 반복적으로 하락을 멈추는 가격대입니다. 지지선을 이탈하면 새로운 저점을 탐색합니다. 반대인 저항선은 주가가 반복적으로 상승을 멈추는 가격대입니다."},
+
+  {part:"2부 기술적분석",
+   hint:"과거에 특정 가격대에서 <strong>거래량이 집중된 구간</strong>입니다.\n많은 투자자가 그 가격에 매수·매도한 이력이 있어,\n주가가 다시 그 구간에 오면 <strong>본전 심리</strong>가 작동해\n강력한 지지 또는 저항으로 작용합니다.",
+   q:"위 설명에 해당하는 개념은 무엇인가요?",
+   opts:["이동평균선","볼린저밴드","추세선","매물대"],
+   ans:3,
+   exp:"<strong>매물대</strong>는 과거 거래가 집중된 가격대로, 본전 심리가 작동해 강력한 지지·저항이 됩니다. HTS의 PBV(Price by Volume) 지표로 확인할 수 있습니다."},
+];
+
+let cur=0, score=0, answered=false, results=[];
+
+function render(){
+  const q=QS[cur];
+  const pct=Math.round((cur/QS.length)*100);
+  document.getElementById('prog').style.width=pct+'%';
+  document.getElementById('q-num').textContent=(cur+1)+' / '+QS.length;
+  document.getElementById('q-part-text').textContent=q.part;
+
+  const pb=document.getElementById('part-badge');
+  pb.textContent=q.part;
+  pb.className='part-badge '+(q.part.includes('1부')?'part-a':'part-b');
+
+  document.getElementById('hint-box').innerHTML=q.hint.replace(/\n/g,'<br>');
+  document.getElementById('q-text').textContent=q.q;
+
+  const fb=document.getElementById('feedback');
+  fb.className='feedback'; fb.innerHTML='';
+  document.getElementById('next-btn').className='next-btn';
+  answered=false;
+
+  const opts=document.getElementById('opts');
+  opts.innerHTML='';
+  q.opts.forEach((o,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opt';
+    btn.textContent=String.fromCharCode(9312+i)+'  '+o;
+    btn.onclick=()=>choose(i);
+    opts.appendChild(btn);
+  });
+}
+
+function choose(i){
+  if(answered)return;
+  answered=true;
+  const q=QS[cur];
+  const btns=document.querySelectorAll('.opt');
+  const correct=(i===q.ans);
+  if(correct)score++;
+  results.push({q:q.q,correct,ans:q.opts[q.ans],chosen:q.opts[i]});
+
+  btns.forEach((b,idx)=>{
+    b.disabled=true;
+    if(idx===q.ans)b.classList.add('correct');
+    else if(idx===i&&!correct)b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+
+  const fb=document.getElementById('feedback');
+  fb.className='feedback show '+(correct?'ok':'ng');
+  fb.innerHTML=(correct?'<strong>정답!</strong>  ':'<strong>오답.</strong>  ')+q.exp;
+
+  const nb=document.getElementById('next-btn');
+  nb.className='next-btn show';
+  nb.textContent=cur<QS.length-1?'다음 문제 →':'결과 보기 →';
+}
+
+document.getElementById('next-btn').onclick=()=>{
+  cur++;
+  if(cur<QS.length)render();else showResult();
+};
+
+function showResult(){
+  document.getElementById('prog').style.width='100%';
+  document.getElementById('quiz-area').style.display='none';
+  const ra=document.getElementById('result-area');
+  ra.style.display='block';
+
+  const p=score/QS.length;
+  let grade,gc,gb,msg;
+  if(p>=0.9){grade='S  완벽!';gc='#8C3830';gb='rgba(184,80,66,.12)';msg='10문제를 거의 다 맞히셨습니다. 오늘 강의 핵심 개념을 완벽하게 이해하셨네요!';}
+  else if(p>=0.7){grade='A  우수';gc='#1A4D1A';gb='#EAF3DE';msg='좋은 성적입니다! 틀린 문제의 해설을 한 번 더 읽어보세요.';}
+  else if(p>=0.5){grade='B  양호';gc='#633806';gb='#FAEEDA';msg='절반 이상 맞히셨습니다. 강의 자료를 복습하면 금방 완벽해질 거예요!';}
+  else{grade='C  재도전';gc='#501313';gb='#FCEBEB';msg='오늘 배운 용어들을 다시 정리해 보세요. 한 번 더 풀면 훨씬 나아집니다!';}
+
+  const reviewHTML=results.map((r,i)=>`
+    <div class="review-item ${r.correct?'ok':'ng'}">
+      <div class="review-q">Q${i+1}. ${r.q}</div>
+      ${r.correct?'✓ 정답: '+r.ans:'✗ 내 선택: '+r.chosen+'<br>정답: '+r.ans}
+    </div>`).join('');
+
+  ra.innerHTML=`
+    <div class="result">
+      <div class="score-ring">
+        <span class="score-num">${score}</span>
+        <span class="score-denom">/ ${QS.length}</span>
+      </div>
+      <div class="grade" style="background:${gb};color:${gc}">${grade}</div>
+      <p class="result-msg">${msg}</p>
+      <div class="action-row">
+        <button class="btn-retry" onclick="restart()">다시 풀기</button>
+        <a class="btn-hub" href="index.html">허브로 돌아가기</a>
+      </div>
+      <p class="review-title">문제별 결과</p>
+      <div class="review-list">${reviewHTML}</div>
+    </div>`;
+}
+
+function restart(){
+  cur=0;score=0;answered=false;results=[];
+  document.getElementById('result-area').style.display='none';
+  document.getElementById('quiz-area').style.display='block';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
