@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>소비 편향 진단기 | 부평구 심화 4차시</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+      background: #F0F2F5;
+      color: #1E2A3A;
+      min-height: 100vh;
+      padding-bottom: 48px;
+    }
+
+    header {
+      background: #1E3A5F;
+      padding: 20px 20px 18px;
+    }
+    header .label {
+      font-size: 12px;
+      color: #F5A623;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    header h1 { font-size: 22px; font-weight: 700; color: #fff; line-height: 1.3; }
+    header p { font-size: 14px; color: #A8C0D6; margin-top: 6px; }
+
+    .content { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1E3A5F;
+      margin-bottom: 4px;
+    }
+    .card-sub {
+      font-size: 14px;
+      color: #6B7280;
+      margin-bottom: 16px;
+    }
+
+    /* Progress */
+    .progress-bar {
+      background: #E5E7EB;
+      border-radius: 4px;
+      height: 6px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #F5A623;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+
+    /* Question */
+    .q-item { margin-bottom: 20px; }
+    .q-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1E2A3A;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+    .q-num {
+      display: inline-block;
+      background: #1E3A5F;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 4px;
+      padding: 2px 7px;
+      margin-bottom: 6px;
+    }
+    .options {
+      display: flex;
+      gap: 8px;
+    }
+    .opt-btn {
+      flex: 1;
+      padding: 10px 6px;
+      border: 2px solid #D1D5DB;
+      border-radius: 8px;
+      background: #FAFAFA;
+      font-size: 14px;
+      font-weight: 600;
+      color: #6B7280;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .opt-btn.sel-0 { border-color: #6B7280; background: #F3F4F6; color: #374151; }
+    .opt-btn.sel-1 { border-color: #F5A623; background: #FFF8EC; color: #92400E; }
+    .opt-btn.sel-2 { border-color: #EF4444; background: #FEF2F2; color: #991B1B; }
+
+    /* Buttons */
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      background: #1E3A5F;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 6px;
+    }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-primary:disabled { background: #9CA3AF; cursor: not-allowed; }
+    .btn-orange {
+      width: 100%;
+      padding: 16px;
+      background: #F5A623;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 6px;
+    }
+    .btn-orange:active { transform: scale(0.97); }
+    .btn-outline {
+      width: 100%;
+      padding: 13px;
+      background: #fff;
+      color: #6B7280;
+      border: 1.5px solid #D1D5DB;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    /* Result cards */
+    .rank-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+    .result-card {
+      background: #fff;
+      border-radius: 14px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    .result-header {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      cursor: pointer;
+    }
+    .result-name {
+      flex: 1;
+    }
+    .result-name h3 { font-size: 17px; font-weight: 700; color: #1E2A3A; }
+    .result-name p { font-size: 13px; color: #6B7280; margin-top: 2px; }
+    .toggle-icon { font-size: 18px; color: #9CA3AF; transition: transform 0.2s; }
+    .toggle-icon.open { transform: rotate(180deg); }
+
+    .result-body {
+      display: none;
+      border-top: 1px solid #F3F4F6;
+    }
+    .result-body.open { display: block; }
+
+    .info-row {
+      padding: 14px 20px;
+      border-bottom: 1px solid #F9FAFB;
+    }
+    .info-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+    .info-text {
+      font-size: 15px;
+      line-height: 1.65;
+      color: #374151;
+    }
+    .info-label.marketing { color: #EF4444; }
+    .info-label.overcome { color: #16A34A; }
+    .info-label.what { color: #1E3A5F; }
+
+    /* Principle card */
+    .principle-card {
+      background: linear-gradient(135deg, #1E3A5F 0%, #2D4F7C 100%);
+      border-radius: 16px;
+      padding: 24px 20px;
+      margin-bottom: 14px;
+    }
+    .principle-card h3 {
+      color: #F5A623;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+    .principle-input-wrap { margin-bottom: 14px; }
+    .p-num {
+      display: inline-block;
+      width: 26px;
+      height: 26px;
+      background: #F5A623;
+      color: #fff;
+      border-radius: 50%;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 26px;
+      margin-bottom: 6px;
+    }
+    .p-hint {
+      font-size: 12px;
+      color: #A8C0D6;
+      margin-bottom: 6px;
+    }
+    textarea.principle-input {
+      width: 100%;
+      background: rgba(255,255,255,0.12);
+      border: 1.5px solid rgba(255,255,255,0.25);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 16px;
+      color: #fff;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 72px;
+      line-height: 1.5;
+    }
+    textarea.principle-input::placeholder { color: rgba(255,255,255,0.4); }
+    textarea.principle-input:focus { outline: none; border-color: #F5A623; }
+
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px;
+      background: #F5A623;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 4px;
+    }
+    .copy-btn:active { transform: scale(0.97); }
+    .copy-btn.copied { background: #22C55E; }
+
+    /* Tip box */
+    .tip-box {
+      background: #FFF8EC;
+      border: 1px solid #F5A623;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 14px;
+      color: #92400E;
+      line-height: 1.65;
+      margin-bottom: 14px;
+    }
+    .tip-box strong { display: block; color: #F5A623; font-weight: 700; margin-bottom: 4px; }
+
+    /* Score bar */
+    .score-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .score-label { font-size: 13px; color: #374151; width: 90px; flex-shrink: 0; }
+    .score-track { flex: 1; background: #E5E7EB; border-radius: 4px; height: 10px; overflow: hidden; }
+    .score-fill { height: 100%; border-radius: 4px; }
+    .score-val { font-size: 13px; font-weight: 700; width: 28px; text-align: right; flex-shrink: 0; }
+
+    footer {
+      text-align: center;
+      padding: 24px 20px;
+      font-size: 12px;
+      color: #9CA3AF;
+      line-height: 1.65;
+    }
+
+    .hidden { display: none; }
+    .step-indicator {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+    .step-dot {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: #E5E7EB;
+      transition: background 0.3s;
+    }
+    .step-dot.active { background: #F5A623; }
+    .step-dot.done { background: #1E3A5F; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="label">2026 부평구 4050 1인가구 심화 4차시</div>
+  <h1>소비 편향 진단기</h1>
+  <p>15문항으로 나의 편향 Top 3를 찾고<br>나만의 원칙 카드를 만들어봅니다</p>
+</header>
+
+<div class="content">
+
+  <!-- 단계 표시 -->
+  <div class="step-indicator">
+    <div class="step-dot active" id="dot1"></div>
+    <div class="step-dot" id="dot2"></div>
+    <div class="step-dot" id="dot3"></div>
+  </div>
+
+  <!-- ── STEP 1: 진단 ── -->
+  <div id="step1">
+    <div class="card">
+      <div class="card-title">내 소비 편향 진단</div>
+      <div class="card-sub">각 문항을 솔직하게 체크해주세요 (15문항)</div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress" style="width:0%"></div>
+      </div>
+      <div id="questions"></div>
+      <button class="btn-primary" id="result-btn" onclick="showResults()" disabled>
+        결과 확인하기
+      </button>
+    </div>
+  </div>
+
+  <!-- ── STEP 2: 결과 ── -->
+  <div id="step2" class="hidden">
+    <div class="tip-box">
+      <strong>📊 나의 소비 편향 분석 결과</strong>
+      아래 편향들이 내 소비 결정에 가장 큰 영향을 주고 있습니다.<br>
+      각 항목을 눌러 마케팅 활용법과 극복 전략을 확인하세요.
+    </div>
+
+    <!-- 전체 점수 차트 -->
+    <div class="card">
+      <div class="card-title" style="margin-bottom:14px">편향 점수 전체 현황</div>
+      <div id="score-chart"></div>
+    </div>
+
+    <!-- Top 3 결과 카드 -->
+    <div id="result-cards"></div>
+
+    <button class="btn-orange" onclick="showPrinciple()">
+      ✍️ 나의 원칙 카드 만들기
+    </button>
+    <button class="btn-outline" onclick="restart()">↩ 다시 진단하기</button>
+  </div>
+
+  <!-- ── STEP 3: 원칙 카드 ── -->
+  <div id="step3" class="hidden">
+    <div class="tip-box">
+      <strong>✍️ 나만의 소비 원칙 카드</strong>
+      나의 편향 Top 3를 바탕으로 원칙 3가지가 미리 작성되었습니다.<br>
+      직접 수정하고 복사해서 저장해두세요.
+    </div>
+
+    <div class="principle-card">
+      <h3>나의 소비 원칙 카드 — 2026</h3>
+      <div class="principle-input-wrap">
+        <div class="p-num">1</div>
+        <div class="p-hint" id="hint1"></div>
+        <textarea class="principle-input" id="p1" rows="2"></textarea>
+      </div>
+      <div class="principle-input-wrap">
+        <div class="p-num">2</div>
+        <div class="p-hint" id="hint2"></div>
+        <textarea class="principle-input" id="p2" rows="2"></textarea>
+      </div>
+      <div class="principle-input-wrap">
+        <div class="p-num">3</div>
+        <div class="p-hint" id="hint3"></div>
+        <textarea class="principle-input" id="p3" rows="2"></textarea>
+      </div>
+    </div>
+
+    <button class="copy-btn" id="copy-btn" onclick="copyCard()">
+      📋 원칙 카드 복사하기
+    </button>
+    <button class="btn-outline" onclick="goBack()">↩ 결과로 돌아가기</button>
+  </div>
+
+</div>
+
+<footer>
+  본 도구는 교육 목적으로 제작되었으며, 실제 금융 상품이나 심리 진단과 다를 수 있습니다.<br>
+  진단 결과는 참고용이며 개인차가 있습니다.<br><br>
+  2026 부평구 4050 1인가구 재무교육 심화과정 · IdentiFi 정원준 CFP
+</footer>
+
+<script>
+const questions = [
+  { text: "할인 중인 물건이 꼭 필요하지 않아도 '나중에 사면 더 비쌀 것 같아서' 산 적이 있다.", bias: "A" },
+  { text: "'오늘 자정 마감', '재고 3개 남음' 같은 문구를 보고 급하게 결제한 적이 있다.", bias: "E" },
+  { text: "이미 돈을 냈다는 이유로 잘 안 쓰는 구독 서비스나 보험을 계속 유지했다.", bias: "H" },
+  { text: "정가 대비 할인이 크면 원래 살 계획이 없어도 '이득'인 것 같아 구매하게 된다.", bias: "C" },
+  { text: "월 구독료는 부담 없어 보이지만, 연간으로 계산하면 금액에 깜짝 놀란다.", bias: "D" },
+  { text: "주변 사람들이나 SNS에서 특정 상품·투자를 많이 한다고 하면 관심이 자연스럽게 생긴다.", bias: "F" },
+  { text: "해지해야 한다고 생각하는 구독 서비스나 앱을 귀찮아서 그냥 계속 두는 편이다.", bias: "G" },
+  { text: "보너스, 세금환급금, 캐시백이 생기면 평소보다 더 자유롭게 지출한다.", bias: "I" },
+  { text: "사고 싶은 물건이 있을 때 장점이나 긍정적 리뷰 위주로 검색하는 편이다.", bias: "J" },
+  { text: "손해 보고 있는 주식이나 투자 상품을 '본전 올 때까지' 팔지 못한다.", bias: "B" },
+  { text: "나는 충동구매를 잘 안 한다고 생각하지만, 실제 카드 내역을 보면 예상보다 많다.", bias: "K" },
+  { text: "할부 0% 혜택이 있으면 원래 예산보다 비싼 것도 큰 부담 없이 결제한다.", bias: "A" },
+  { text: "주식이나 코인이 크게 오를 때 더 사고 싶고, 크게 내릴 때는 팔고 싶어진다.", bias: "F" },
+  { text: "카드 포인트나 캐시백으로 결제할 때는 내 돈을 쓰는 것 같지 않아 더 쉽게 쓴다.", bias: "I" },
+  { text: "나는 평균적인 사람보다 돈 관리나 소비 결정을 잘한다고 생각한다.", bias: "K" },
+];
+
+const biasInfo = {
+  A: {
+    name: "현재 편향",
+    short: "지금이 미래보다 훨씬 크게 느껴진다",
+    what: "오늘의 혜택이 미래 비용보다 과도하게 크게 느껴지는 현상입니다. 할부 0%, 오늘만 특가 등에 반응하기 쉽고, 노후 준비를 자꾸 미루게 됩니다.",
+    marketing: "\"오늘만 이 가격\" \"할부 0%\" \"선결제 후혜택\" — 지금 부담이 없어 보이게 만들어 미래 비용을 감추는 전략입니다.",
+    overcome: "★ 선저축 자동이체: 월급일 당일 저축·투자 계좌로 먼저 이체하세요. 쓰고 남은 돈이 아니라, 남기고 쓰는 구조를 만드는 것이 핵심입니다.",
+    color: "#7C3AED",
+    principle: "월급일 당일, 월급의 ___% 를 저축·투자 계좌로 자동이체한다.",
+    hint: "현재 편향 극복 원칙"
+  },
+  B: {
+    name: "손실 회피",
+    short: "잃는 것이 얻는 것보다 2배 아프다",
+    what: "1만 원을 잃는 고통이 1만 원을 얻는 기쁨보다 2배 크게 느껴집니다. 손해 주식을 못 파는 이유, 무료 체험 후 해지를 못하는 이유가 여기에 있습니다.",
+    marketing: "\"지금 안 사면 손해\" \"무료 체험 후 자동 전환\" \"탈퇴 시 사라지는 혜택\" — 놓치는 것을 손실로 느끼게 만드는 전략입니다.",
+    overcome: "★ 이득 프레임으로 전환: '안 사면 손해'가 아니라 '안 사면 그 돈이 남는다'로 생각을 바꿔보세요. 무료 체험 종료일을 캘린더에 미리 등록해두세요.",
+    color: "#EF4444",
+    principle: "무료 체험 가입 시 종료일을 캘린더에 바로 등록하고, 종료 3일 전 해지 여부를 결정한다.",
+    hint: "손실 회피 극복 원칙"
+  },
+  C: {
+    name: "닻 내리기",
+    short: "처음 본 숫자가 판단의 기준이 된다",
+    what: "처음 접한 가격(정가)이 이후 판단의 기준점이 됩니다. 정가 100만원이 70만원에 나오면 '싸다'고 느끼지만, 사실 70만원 자체를 써야 할 이유가 있는지가 기준이어야 합니다.",
+    marketing: "정가를 높게 설정한 후 대폭 할인, 비싼 상품을 먼저 보여준 뒤 중간 가격을 합리적으로 느끼게 하는 전략입니다.",
+    overcome: "★ 절대 금액으로 재판단: '몇 % 할인'이 아니라 '이 돈을 지금 쓸 의향이 있나?'로 질문을 바꾸세요. 정가를 지우고 판단하는 연습이 효과적입니다.",
+    color: "#F5A623",
+    principle: "할인율이 아니라 결제 금액 자체를 기준으로 판단한다. '이 돈을 지금 쓸 이유가 있나?'를 먼저 묻는다.",
+    hint: "닻 내리기 극복 원칙"
+  },
+  D: {
+    name: "프레이밍 효과",
+    short: "같은 금액도 표현 방식에 따라 다르게 느껴진다",
+    what: "\"월 9,900원\"과 \"연 118,800원\"은 같은 금액이지만 전혀 다르게 느껴집니다. 표현 단위가 판단을 바꾸는 것이 프레이밍 효과입니다.",
+    marketing: "\"하루 커피 한 잔 값\" \"월 단위 구독료\" — 실제 총금액을 감추고 작아 보이는 단위로 표현하는 전략입니다.",
+    overcome: "★ 단위 통일 후 재계산: 월 단위로 표시된 금액은 반드시 연간·총납입액으로 직접 계산해보세요. '커피 한 잔' 비유는 무시하고 내 기준 단위로 재표현하세요.",
+    color: "#3B82F6",
+    principle: "월 단위 요금은 반드시 연간으로 환산해서 판단한다. 총금액이 ___ 만원 이상이면 하루 대기 후 결정한다.",
+    hint: "프레이밍 효과 극복 원칙"
+  },
+  E: {
+    name: "희소성 편향",
+    short: "희귀하면 더 가치 있어 보인다",
+    what: "수량이나 시간이 제한될수록 그 가치가 더 크게 느껴집니다. '지금 아니면 안 된다'는 공포(FOMO)와 연결되어 충동적 결정을 유발합니다.",
+    marketing: "\"재고 3개 남음\" \"오늘 자정 마감\" \"한정판\" \"카운트다운 타이머\" — 인위적으로 희소성을 만들어 즉각 결제를 유도하는 전략입니다.",
+    overcome: "★ 인위적 희소성 구분: 마감이 지나도 다시 열리는 경우가 대부분입니다. '진짜 희소'인지 '마케팅 희소'인지 의심하고, 24시간 대기 후 재결정하세요.",
+    color: "#16A34A",
+    principle: "'마감' '한정' 문구를 보면 24시간 대기 후 재결정한다. 긴박감이 느껴질수록 더 천천히 결정한다.",
+    hint: "희소성 편향 극복 원칙"
+  },
+  F: {
+    name: "사회적 증거",
+    short: "남들이 하니까 나도 해야 할 것 같다",
+    what: "다수가 선택한 것이 옳다고 자동으로 판단하는 현상입니다. SNS에서 주변인의 소비·투자를 보고 따라 하거나, 주식이 오를 때 더 사고 싶어지는 군중심리와 연결됩니다.",
+    marketing: "\"이번 달 1만명 구매\" \"베스트셀러 1위\" 인플루언서 협찬 후기 — 다수가 선택했다는 사실로 개인 판단을 대체하는 전략입니다.",
+    overcome: "★ 나에게 필요한가?: 남들이 좋다 해도 내 상황에 맞지 않으면 불필요합니다. SNS 소비 비교를 차단하고, '왜 나에게 필요한가'를 먼저 써보세요.",
+    color: "#1E3A5F",
+    principle: "SNS나 주변 추천으로 관심이 생긴 것은 '내가 왜 필요한가'를 3가지 이유로 써보고 결정한다.",
+    hint: "사회적 증거 극복 원칙"
+  },
+  G: {
+    name: "현상 유지 편향",
+    short: "바꾸기 귀찮아서 그냥 둔다",
+    what: "현재 상태를 유지하는 것이 더 안전하게 느껴지는 현상입니다. 안 쓰는 구독 서비스, 갱신되는 보험, 낮은 금리 예금을 그냥 두는 이유입니다.",
+    marketing: "자동갱신 기본 설정, 해지 메뉴를 깊숙이 숨기기, 탈퇴 절차를 복잡하게 만들기 — 귀찮음을 이용해 유지를 유도하는 전략입니다.",
+    overcome: "★ 기본값을 의심하라: '그냥 두는 것'도 선택입니다. 분기 1회 구독·보험 목록 점검 일정을 캘린더에 등록해두세요.",
+    color: "#0F766E",
+    principle: "3개월마다 구독 서비스·자동결제 목록을 점검하고, 3개월 이상 미사용 항목은 해지한다.",
+    hint: "현상 유지 편향 극복 원칙"
+  },
+  H: {
+    name: "매몰비용 오류",
+    short: "이미 쓴 돈 때문에 계속 버린다",
+    what: "이미 지불한 비용 때문에 손해인 줄 알면서도 계속하는 현상입니다. '10년 냈는데 해지하면 손해'가 대표적인 매몰비용 오류입니다.",
+    marketing: "멤버십·시즌권 선납, 장기 약정 후 위약금, 포인트 소멸 전 사용 유도 — 이미 낸 돈을 이용해 계속 유지하도록 설계된 전략입니다.",
+    overcome: "★ 지금부터만 계산하라: 과거에 낸 돈은 이미 끝났습니다. '지금부터 낼 비용 대비 얻는 것이 있나?'만 판단하세요. 본전 개념을 버리는 것이 핵심입니다.",
+    color: "#B45309",
+    principle: "보험·구독을 유지할지 결정할 때는 '지금까지 낸 돈'은 고려하지 않는다. 지금부터의 비용과 혜택만 비교한다.",
+    hint: "매몰비용 오류 극복 원칙"
+  },
+  I: {
+    name: "정신적 회계",
+    short: "돈의 출처에 따라 다르게 쓴다",
+    what: "같은 금액이어도 어디서 왔느냐에 따라 다르게 대우하는 현상입니다. 보너스·캐시백·포인트는 '공짜돈'처럼 느껴져 더 쉽게 씁니다.",
+    marketing: "캐시백·포인트·상품권 제공, 환급금 타이밍에 고가 마케팅 집중 — 돈처럼 보이지 않는 형태로 지출 심리적 장벽을 낮추는 전략입니다.",
+    overcome: "★ 모든 돈은 같은 돈: 포인트·캐시백도 내 돈입니다. 보너스도 월급처럼 예산을 배분하고, 포인트는 다음 달 생활비로 넣어두세요.",
+    color: "#7C3AED",
+    principle: "보너스·환급금·캐시백을 받으면 다음 달 저축 계좌에 먼저 넣는다. 포인트도 내 돈으로 계산한다.",
+    hint: "정신적 회계 극복 원칙"
+  },
+  J: {
+    name: "확증 편향",
+    short: "믿고 싶은 것에 대한 정보만 모은다",
+    what: "이미 결론을 내린 뒤 그것을 지지하는 정보만 찾는 현상입니다. 사고 싶은 제품의 장점만 검색하거나, 투자하고 싶은 종목의 호재만 모으는 것이 대표적입니다.",
+    marketing: "검색 광고·추천 알고리즘이 관심 상품을 계속 노출시켜 확증을 강화합니다. 긍정 리뷰를 상단에 배치하는 것도 같은 전략입니다.",
+    overcome: "★ 반대 의견을 먼저 찾아라: 사고 싶다는 생각이 들면 '왜 사면 안 되나'를 먼저 검색하세요. 부정 리뷰를 습관적으로 찾아보고, 다른 사람의 냉정한 피드백을 구하세요.",
+    color: "#0369A1",
+    principle: "구매나 투자를 결정하기 전, 반대 의견·부정 리뷰를 먼저 검색한 뒤 결정한다.",
+    hint: "확증 편향 극복 원칙"
+  },
+  K: {
+    name: "과잉확신",
+    short: "나는 평균보다 잘한다는 착각",
+    what: "자신의 능력·판단을 실제보다 높게 평가하는 현상입니다. '나는 충동구매 안 해' '나는 투자 잘해'라고 생각하지만 실제 기록을 보면 다른 경우가 많습니다.",
+    marketing: "\"당신만을 위한\" 맞춤 광고, VIP 호칭, 전문가 정보처럼 보이게 하는 포장 — 스스로를 특별하다고 느끼게 해서 판단력에 과신하게 만드는 전략입니다.",
+    overcome: "★ 기록으로 실제를 확인하라: 내 소비·투자 기록을 숫자로 직접 확인하세요. 가계부·투자 수익률을 주기적으로 기록하고, 예산 대비 실제 지출을 비교해보세요.",
+    color: "#D97706",
+    principle: "매달 말, 예산 대비 실제 지출을 기록하고 비교한다. '나는 잘 관리하고 있다'는 느낌이 아닌 숫자로 확인한다.",
+    hint: "과잉확신 극복 원칙"
+  }
+};
+
+// 답변 저장
+const answers = new Array(questions.length).fill(-1);
+let topBiases = [];
+
+// 문항 렌더링
+function renderQuestions() {
+  const container = document.getElementById('questions');
+  questions.forEach((q, i) => {
+    const div = document.createElement('div');
+    div.className = 'q-item';
+    div.innerHTML = `
+      <div class="q-num">Q${i + 1}</div>
+      <div class="q-text">${q.text}</div>
+      <div class="options">
+        <button class="opt-btn" onclick="selectOpt(${i}, 0, this)">거의 아님</button>
+        <button class="opt-btn" onclick="selectOpt(${i}, 1, this)">가끔</button>
+        <button class="opt-btn" onclick="selectOpt(${i}, 2, this)">자주 그렇다</button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function selectOpt(qIdx, val, btn) {
+  const opts = btn.parentElement.querySelectorAll('.opt-btn');
+  opts.forEach(b => { b.classList.remove('sel-0','sel-1','sel-2'); });
+  btn.classList.add('sel-' + val);
+  answers[qIdx] = val;
+
+  const answered = answers.filter(a => a >= 0).length;
+  document.getElementById('progress').style.width = (answered / questions.length * 100) + '%';
+  document.getElementById('result-btn').disabled = answered < questions.length;
+}
+
+function calcScores() {
+  const scores = {};
+  Object.keys(biasInfo).forEach(k => { scores[k] = 0; });
+  questions.forEach((q, i) => {
+    if (answers[i] >= 0) scores[q.bias] += answers[i];
+  });
+  return scores;
+}
+
+function showResults() {
+  const scores = calcScores();
+  const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  topBiases = sorted.slice(0, 3).map(e => e[0]);
+
+  // 단계 표시
+  setStep(2);
+
+  // 점수 차트
+  const chart = document.getElementById('score-chart');
+  const maxScore = Math.max(...Object.values(scores), 1);
+  sorted.forEach(([key, score]) => {
+    const info = biasInfo[key];
+    const pct = Math.round(score / maxScore * 100);
+    chart.innerHTML += `
+      <div class="score-row">
+        <div class="score-label" style="font-size:13px;">${info.name}</div>
+        <div class="score-track">
+          <div class="score-fill" style="width:${pct}%;background:${info.color}"></div>
+        </div>
+        <div class="score-val" style="color:${info.color}">${score}</div>
+      </div>`;
+  });
+
+  // Top 3 카드
+  const cards = document.getElementById('result-cards');
+  const medals = ['🥇', '🥈', '🥉'];
+  topBiases.forEach((key, rank) => {
+    const info = biasInfo[key];
+    cards.innerHTML += `
+      <div class="result-card">
+        <div class="result-header" onclick="toggleCard(this)">
+          <span class="rank-badge" style="background:${info.color}">${medals[rank]}</span>
+          <div class="result-name">
+            <h3>${info.name}</h3>
+            <p>${info.short}</p>
+          </div>
+          <span class="toggle-icon">▼</span>
+        </div>
+        <div class="result-body">
+          <div class="info-row">
+            <div class="info-label what">무엇인가</div>
+            <div class="info-text">${info.what}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label marketing">마케팅은 이렇게 씁니다</div>
+            <div class="info-text">${info.marketing}</div>
+          </div>
+          <div class="info-row" style="border-bottom:none">
+            <div class="info-label overcome">이렇게 막으세요</div>
+            <div class="info-text">${info.overcome}</div>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleCard(header) {
+  const body = header.nextElementSibling;
+  const icon = header.querySelector('.toggle-icon');
+  body.classList.toggle('open');
+  icon.classList.toggle('open');
+}
+
+function showPrinciple() {
+  setStep(3);
+
+  const hints = ['hint1','hint2','hint3'];
+  const inputs = ['p1','p2','p3'];
+  topBiases.forEach((key, i) => {
+    const info = biasInfo[key];
+    document.getElementById(hints[i]).textContent = info.hint + ' (' + info.name + ')';
+    document.getElementById(inputs[i]).value = info.principle;
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function copyCard() {
+  const p1 = document.getElementById('p1').value.trim();
+  const p2 = document.getElementById('p2').value.trim();
+  const p3 = document.getElementById('p3').value.trim();
+  const text = `나의 소비 원칙 카드 (2026)\n\n① ${p1}\n\n② ${p2}\n\n③ ${p3}\n\n— 부평구 4050 재무교육 심화 4차시`;
+
+  const btn = document.getElementById('copy-btn');
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✅ 복사됐습니다!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = '📋 원칙 카드 복사하기';
+      btn.classList.remove('copied');
+    }, 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = '✅ 복사됐습니다!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = '📋 원칙 카드 복사하기';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+function setStep(n) {
+  document.getElementById('step1').classList.toggle('hidden', n !== 1);
+  document.getElementById('step2').classList.toggle('hidden', n !== 2);
+  document.getElementById('step3').classList.toggle('hidden', n !== 3);
+  ['dot1','dot2','dot3'].forEach((id, i) => {
+    const dot = document.getElementById(id);
+    dot.className = 'step-dot';
+    if (i + 1 < n) dot.classList.add('done');
+    else if (i + 1 === n) dot.classList.add('active');
+  });
+}
+
+function restart() {
+  answers.fill(-1);
+  topBiases = [];
+  document.getElementById('questions').innerHTML = '';
+  document.getElementById('score-chart').innerHTML = '';
+  document.getElementById('result-cards').innerHTML = '';
+  document.getElementById('progress').style.width = '0%';
+  document.getElementById('result-btn').disabled = true;
+  renderQuestions();
+  setStep(1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function goBack() {
+  setStep(2);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 초기화
+renderQuestions();
+</script>
+</body>
+</html>
