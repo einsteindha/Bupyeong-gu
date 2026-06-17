@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>우리 부부 머니 유형 진단 | IdentiFi 정원준 CFP</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    background: #f0f4f8;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 20px;
+    max-width: 480px;
+    width: 100%;
+    padding: 32px 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  }
+
+  /* 헤더 */
+  .header { text-align: center; margin-bottom: 28px; }
+  .header .badge {
+    display: inline-block;
+    background: #1E3A5F;
+    color: #fff;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+  .header h1 { font-size: 22px; color: #1E3A5F; font-weight: 700; line-height: 1.4; }
+  .header p { font-size: 14px; color: #666; margin-top: 6px; }
+
+  /* 진행 바 */
+  .progress-wrap { margin-bottom: 28px; }
+  .progress-label { font-size: 13px; color: #888; margin-bottom: 6px; }
+  .progress-bar {
+    height: 8px;
+    background: #e8eef4;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1E3A5F, #F5A623);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+
+  /* 질문 */
+  .question-box { margin-bottom: 28px; }
+  .question-num { font-size: 13px; color: #F5A623; font-weight: 700; margin-bottom: 8px; }
+  .question-text { font-size: 18px; color: #1a1a2e; font-weight: 600; line-height: 1.5; }
+
+  /* 선택지 */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-btn {
+    background: #f5f7fa;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 15px;
+    color: #333;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .option-btn:hover { border-color: #1E3A5F; background: #eef3f9; }
+  .option-btn.selected { border-color: #F5A623; background: #fff8ec; color: #1E3A5F; font-weight: 600; }
+  .option-dot {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid #ccc;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+  }
+  .option-btn.selected .option-dot { border-color: #F5A623; background: #F5A623; color: #fff; }
+
+  /* 다음 버튼 */
+  .next-btn {
+    width: 100%;
+    background: #1E3A5F;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background 0.2s;
+    display: none;
+  }
+  .next-btn:hover { background: #162c4a; }
+  .next-btn.visible { display: block; }
+
+  /* 결과 화면 */
+  #result-screen { display: none; }
+  .result-emoji { font-size: 64px; text-align: center; margin-bottom: 12px; }
+  .result-type-badge {
+    display: inline-block;
+    background: #F5A623;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+  }
+  .result-name { font-size: 26px; font-weight: 800; color: #1E3A5F; margin-bottom: 6px; }
+  .result-sub { font-size: 15px; color: #555; line-height: 1.6; margin-bottom: 24px; }
+  .result-section { background: #f5f7fa; border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+  .result-section h3 { font-size: 14px; font-weight: 700; color: #1E3A5F; margin-bottom: 10px; }
+  .result-section ul { padding-left: 16px; }
+  .result-section li { font-size: 15px; color: #444; margin-bottom: 6px; line-height: 1.5; }
+  .tip-box {
+    background: #fff8ec;
+    border-left: 4px solid #F5A623;
+    border-radius: 0 12px 12px 0;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .tip-box h3 { font-size: 14px; color: #c67c00; font-weight: 700; margin-bottom: 8px; }
+  .tip-box p { font-size: 14px; color: #555; line-height: 1.6; }
+  .restart-btn {
+    width: 100%;
+    background: #e8eef4;
+    color: #1E3A5F;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .disclaimer {
+    font-size: 12px;
+    color: #aaa;
+    text-align: center;
+    margin-top: 20px;
+    line-height: 1.5;
+  }
+  .brand { font-size: 12px; color: #bbb; text-align: center; margin-top: 10px; }
+
+  /* 인트로 화면 */
+  #intro-screen { text-align: center; }
+  .intro-emoji { font-size: 56px; margin-bottom: 16px; }
+  .intro-desc { font-size: 15px; color: #555; line-height: 1.7; margin-bottom: 28px; }
+  .start-btn {
+    width: 100%;
+    background: #1E3A5F;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 18px;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .start-btn:hover { background: #162c4a; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="badge">부평구건강가정지원센터 × IdentiFi 정원준 CFP</div>
+    <h1>우리 부부<br>머니 유형 진단</h1>
+  </div>
+
+  <!-- 인트로 -->
+  <div id="intro-screen">
+    <div class="intro-emoji">💰</div>
+    <p class="intro-desc">
+      돈에 대한 내 태도, 알고 계신가요?<br>
+      12개 문항으로 나의 머니 유형을 확인하고<br>
+      배우자와 함께 비교해 보세요.
+    </p>
+    <button class="start-btn" onclick="startQuiz()">진단 시작하기 →</button>
+    <p class="disclaimer">본 진단은 교육 목적으로 제공되며,<br>실제 심리 검사와 다를 수 있습니다.</p>
+  </div>
+
+  <!-- 퀴즈 -->
+  <div id="quiz-screen" style="display:none">
+    <div class="progress-wrap">
+      <div class="progress-label" id="progress-label">1 / 12</div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:8%"></div>
+      </div>
+    </div>
+    <div class="question-box">
+      <div class="question-num" id="question-num">Q1</div>
+      <div class="question-text" id="question-text"></div>
+    </div>
+    <div class="options" id="options"></div>
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">다음 →</button>
+  </div>
+
+  <!-- 결과 -->
+  <div id="result-screen">
+    <div style="text-align:center; margin-bottom:20px;">
+      <div class="result-emoji" id="result-emoji"></div>
+      <div class="result-type-badge" id="result-badge"></div>
+      <div class="result-name" id="result-name"></div>
+      <div class="result-sub" id="result-sub"></div>
+    </div>
+    <div class="result-section">
+      <h3>✅ 이런 점이 강점이에요</h3>
+      <ul id="result-strengths"></ul>
+    </div>
+    <div class="result-section">
+      <h3>⚠️ 이런 점을 주의하세요</h3>
+      <ul id="result-cautions"></ul>
+    </div>
+    <div class="tip-box">
+      <h3>💬 배우자 유형이 다를 때</h3>
+      <p id="result-tip"></p>
+    </div>
+    <button class="restart-btn" onclick="restart()">🔄 다시 진단하기</button>
+    <p class="disclaimer">본 진단은 교육 목적으로 제공되며, 실제 심리 검사와 다를 수 있습니다.</p>
+    <p class="brand">IdentiFi 정원준 CFP · 국가공인 신용상담사</p>
+  </div>
+</div>
+
+<script>
+const questions = [
+  // 저축형 (0,1,2)
+  { text: "돈은 최대한 모아야 마음이 편하다.", type: "저축형" },
+  { text: "지출하기 전에 꼭 필요한지 여러 번 생각하는 편이다.", type: "저축형" },
+  { text: "미래를 위해 현재의 소비를 줄이는 것이 당연하다.", type: "저축형" },
+  // 소비형 (3,4,5)
+  { text: "지금 행복한 경험이 미래 저축보다 더 중요하다.", type: "소비형" },
+  { text: "갖고 싶은 것이 생기면 빠르게 구매하는 편이다.", type: "소비형" },
+  { text: "돈은 쓰려고 버는 것이라고 생각한다.", type: "소비형" },
+  // 불안형 (6,7,8)
+  { text: "통장 잔액이 줄어들면 심하게 불안해진다.", type: "불안형" },
+  { text: "돈이 충분해도 언제 어떻게 될지 걱정이 된다.", type: "불안형" },
+  { text: "재정 상황이 나빠질 것 같은 불안이 자주 든다.", type: "불안형" },
+  // 회피형 (9,10,11)
+  { text: "돈 관련 서류나 청구서를 확인하는 것이 부담스럽다.", type: "회피형" },
+  { text: "재무 계획을 세워야 한다는 건 알지만 자꾸 미루게 된다.", type: "회피형" },
+  { text: "배우자와 돈 이야기를 하면 불편해서 피하게 된다.", type: "회피형" },
+];
+
+const options = [
+  { label: "전혀 그렇지 않다", score: 1 },
+  { label: "그렇지 않다",     score: 2 },
+  { label: "보통이다",        score: 3 },
+  { label: "그렇다",          score: 4 },
+  { label: "매우 그렇다",     score: 5 },
+];
+
+const typeData = {
+  "저축형": {
+    emoji: "💰",
+    badge: "저축형",
+    name: "안정 설계자",
+    sub: "미래를 위해 오늘을 관리하는 현명한 계획가!\n안정감이 최우선이고, 재무 목표를 꾸준히 실천하는 힘이 있습니다.",
+    strengths: ["목표 저축률을 꾸준히 달성하는 실행력", "충동 소비 없이 계획적으로 지출"],
+    cautions: ["지나친 절약으로 삶의 질이 낮아질 수 있어요", "배우자의 소비를 통제하려는 갈등이 생길 수 있어요"],
+    tip: "소비형 배우자와는 '자유 지출 예산'을 따로 정해두세요. 각자 결정권을 주면 갈등이 줄어듭니다."
+  },
+  "소비형": {
+    emoji: "🎉",
+    badge: "소비형",
+    name: "현재 충실가",
+    sub: "지금 이 순간을 즐길 줄 아는 활기찬 생활자!\n경험을 중시하고, 삶의 질을 높이는 데 자신 있습니다.",
+    strengths: ["풍요로운 생활로 관계 만족도가 높음", "현재에 집중하는 긍정 에너지"],
+    cautions: ["저축·비상금이 부족해 위기 때 취약해질 수 있어요", "미래 목표(내 집, 노후)가 계획 없이 미뤄질 수 있어요"],
+    tip: "저축형 배우자의 조언을 '잔소리'가 아닌 '함께 설계'로 받아들이면 시너지가 납니다. '우선 저축 후 소비' 규칙 하나만 도입해보세요."
+  },
+  "불안형": {
+    emoji: "🔍",
+    badge: "불안형",
+    name: "꼼꼼한 관리자",
+    sub: "재무 리스크를 절대 놓치지 않는 신중한 관리자!\n꼼꼼한 점검력이 가계의 구멍을 막아줍니다.",
+    strengths: ["지출·잔액을 철저히 모니터링하는 꼼꼼함", "위기 대비 비상금을 충실히 쌓는 경향"],
+    cautions: ["불안이 과도하면 합리적 투자 기회를 놓칠 수 있어요", "배우자에게 재무 스트레스를 전가할 수 있어요"],
+    tip: "배우자와 월 1회 '재무 상황 공유 시간'을 정해두세요. 숫자를 함께 보면 혼자 걱정하는 것보다 불안이 줄어듭니다."
+  },
+  "회피형": {
+    emoji: "🌈",
+    badge: "회피형",
+    name: "자유로운 낙천가",
+    sub: "숫자보다 관계와 감정을 중시하는 따뜻한 사람!\n돈 걱정보다 삶의 여유를 즐기는 것이 자연스럽습니다.",
+    strengths: ["돈으로 인한 스트레스를 잘 받지 않는 여유", "배우자의 재무 결정을 신뢰하고 맡기는 신뢰감"],
+    cautions: ["재무 결정을 미루다 나중에 큰 문제가 생길 수 있어요", "배우자에게 재무 부담이 집중될 수 있어요"],
+    tip: "매달 딱 한 가지만 확인해보세요 — 통장 잔액 하나. 작은 관여에서 시작하면 재무에 대한 거리감이 줄어듭니다."
+  }
+};
+
+let current = 0;
+let scores = { "저축형": 0, "소비형": 0, "불안형": 0, "회피형": 0 };
+let selected = null;
+
+function startQuiz() {
+  document.getElementById("intro-screen").style.display = "none";
+  document.getElementById("quiz-screen").style.display = "block";
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  document.getElementById("question-num").textContent = "Q" + (current + 1);
+  document.getElementById("question-text").textContent = q.text;
+  document.getElementById("progress-label").textContent = (current + 1) + " / " + questions.length;
+  document.getElementById("progress-fill").style.width = ((current + 1) / questions.length * 100) + "%";
+
+  const optWrap = document.getElementById("options");
+  optWrap.innerHTML = "";
+  selected = null;
+  document.getElementById("next-btn").classList.remove("visible");
+
+  options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "option-btn";
+    btn.innerHTML = `<span class="option-dot">${i + 1}</span>${opt.label}`;
+    btn.onclick = () => selectOption(btn, opt.score);
+    optWrap.appendChild(btn);
+  });
+}
+
+function selectOption(btn, score) {
+  document.querySelectorAll(".option-btn").forEach(b => b.classList.remove("selected"));
+  btn.classList.add("selected");
+  selected = score;
+  document.getElementById("next-btn").classList.add("visible");
+}
+
+function nextQuestion() {
+  if (selected === null) return;
+  scores[questions[current].type] += selected;
+  current++;
+  if (current < questions.length) {
+    renderQuestion();
+    document.getElementById("next-btn").textContent = current === questions.length - 1 ? "결과 보기 →" : "다음 →";
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  document.getElementById("quiz-screen").style.display = "none";
+  document.getElementById("result-screen").style.display = "block";
+
+  const topType = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+  const d = typeData[topType];
+
+  document.getElementById("result-emoji").textContent = d.emoji;
+  document.getElementById("result-badge").textContent = d.badge;
+  document.getElementById("result-name").textContent = d.name;
+  document.getElementById("result-sub").textContent = d.sub;
+
+  const sl = document.getElementById("result-strengths");
+  sl.innerHTML = "";
+  d.strengths.forEach(s => { const li = document.createElement("li"); li.textContent = s; sl.appendChild(li); });
+
+  const cl = document.getElementById("result-cautions");
+  cl.innerHTML = "";
+  d.cautions.forEach(c => { const li = document.createElement("li"); li.textContent = c; cl.appendChild(li); });
+
+  document.getElementById("result-tip").textContent = d.tip;
+}
+
+function restart() {
+  current = 0;
+  scores = { "저축형": 0, "소비형": 0, "불안형": 0, "회피형": 0 };
+  selected = null;
+  document.getElementById("result-screen").style.display = "none";
+  document.getElementById("intro-screen").style.display = "block";
+}
+</script>
+</body>
+</html>

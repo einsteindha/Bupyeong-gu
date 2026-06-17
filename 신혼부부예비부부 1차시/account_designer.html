@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>우리 부부 통장 구조 설계기 | IdentiFi 정원준 CFP</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    background: #f0f4f8;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 100%;
+    padding: 32px 24px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  }
+
+  /* 헤더 */
+  .header { text-align: center; margin-bottom: 28px; }
+  .badge {
+    display: inline-block;
+    background: #1E3A5F;
+    color: #fff;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+  }
+  .header h1 { font-size: 22px; color: #1E3A5F; font-weight: 700; line-height: 1.4; }
+  .header p { font-size: 14px; color: #666; margin-top: 6px; }
+
+  /* 스텝 인디케이터 */
+  .step-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+  .step-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #e8eef4;
+    color: #aaa;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .step-dot.active { background: #1E3A5F; color: #fff; }
+  .step-dot.done { background: #F5A623; color: #fff; }
+  .step-line { width: 32px; height: 2px; background: #e8eef4; align-self: center; border-radius: 2px; }
+  .step-line.done { background: #F5A623; }
+
+  /* 섹션 제목 */
+  .section-title { font-size: 18px; font-weight: 700; color: #1E3A5F; margin-bottom: 6px; }
+  .section-desc { font-size: 14px; color: #777; margin-bottom: 20px; line-height: 1.5; }
+
+  /* 입력 그룹 */
+  .input-group { margin-bottom: 16px; }
+  .input-label { font-size: 14px; color: #444; font-weight: 600; margin-bottom: 6px; display: block; }
+  .input-label span { font-weight: 400; color: #888; font-size: 13px; }
+  .input-row {
+    display: flex;
+    align-items: center;
+    background: #f5f7fa;
+    border: 2px solid #e0e6ed;
+    border-radius: 12px;
+    padding: 0 14px;
+    transition: border-color 0.2s;
+  }
+  .input-row:focus-within { border-color: #1E3A5F; }
+  .input-row input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1E3A5F;
+    padding: 14px 0;
+    outline: none;
+    text-align: right;
+    min-width: 0;
+  }
+  .input-unit { font-size: 15px; color: #888; font-weight: 600; margin-left: 4px; white-space: nowrap; }
+
+  /* 구분선 */
+  .divider { height: 1px; background: #eee; margin: 20px 0; }
+
+  /* 슬라이더 */
+  .slider-group { margin-bottom: 4px; }
+  .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .slider-value { font-size: 24px; font-weight: 800; color: #F5A623; }
+  input[type=range] {
+    width: 100%;
+    height: 8px;
+    -webkit-appearance: none;
+    background: linear-gradient(90deg, #F5A623 0%, #e8eef4 0%);
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: #1E3A5F;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    cursor: pointer;
+  }
+  .slider-hint { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; margin-top: 6px; }
+
+  /* 버튼 */
+  .primary-btn {
+    width: 100%;
+    background: #1E3A5F;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 24px;
+    transition: background 0.2s;
+  }
+  .primary-btn:hover { background: #162c4a; }
+  .secondary-btn {
+    width: 100%;
+    background: #e8eef4;
+    color: #1E3A5F;
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+
+  /* 결과 화면 */
+  .result-summary {
+    background: #1E3A5F;
+    border-radius: 14px;
+    padding: 18px;
+    color: #fff;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .result-summary .total-label { font-size: 13px; opacity: 0.75; margin-bottom: 4px; }
+  .result-summary .total-amount { font-size: 28px; font-weight: 800; }
+  .result-summary .total-sub { font-size: 14px; opacity: 0.8; margin-top: 4px; }
+
+  .accounts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .account-card {
+    border-radius: 14px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .account-card .acc-icon { font-size: 28px; margin-bottom: 8px; }
+  .account-card .acc-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .account-card .acc-role { font-size: 11px; opacity: 0.75; margin-bottom: 10px; line-height: 1.4; }
+  .account-card .acc-year { font-size: 20px; font-weight: 800; }
+  .account-card .acc-month { font-size: 13px; opacity: 0.75; margin-top: 2px; }
+
+  .acc-fixed   { background: #1E3A5F; color: #fff; }
+  .acc-living  { background: #2d6a4f; color: #fff; }
+  .acc-save    { background: #F5A623; color: #fff; }
+  .acc-reserve { background: #f0f4f8; color: #1E3A5F; border: 2px solid #d0dae4; }
+  .acc-reserve .acc-name { color: #1E3A5F; }
+
+  .insight-box {
+    background: #fff8ec;
+    border-left: 4px solid #F5A623;
+    border-radius: 0 12px 12px 0;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+  .insight-box p { font-size: 14px; color: #555; line-height: 1.6; }
+  .insight-box strong { color: #c67c00; }
+
+  .reserve-info {
+    background: #f0f4f8;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+  .reserve-info h4 { font-size: 14px; color: #1E3A5F; font-weight: 700; margin-bottom: 6px; }
+  .reserve-info p { font-size: 14px; color: #555; line-height: 1.5; }
+
+  .disclaimer { font-size: 12px; color: #aaa; text-align: center; margin-top: 16px; line-height: 1.5; }
+  .brand { font-size: 12px; color: #bbb; text-align: center; margin-top: 8px; }
+
+  @media (max-width: 360px) {
+    .accounts-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="badge">부평구건강가정지원센터 × IdentiFi 정원준 CFP</div>
+    <h1>우리 부부<br>통장 구조 설계기</h1>
+    <p>연 소득 기준으로 4가지 통장 금액을 자동 계산합니다</p>
+  </div>
+
+  <!-- 스텝 인디케이터 -->
+  <div class="step-indicator">
+    <div class="step-dot active" id="dot1">1</div>
+    <div class="step-line" id="line1"></div>
+    <div class="step-dot" id="dot2">2</div>
+    <div class="step-line" id="line2"></div>
+    <div class="step-dot" id="dot3">3</div>
+    <div class="step-line" id="line3"></div>
+    <div class="step-dot" id="dot4">결과</div>
+  </div>
+
+  <!-- Step 1: 소득 -->
+  <div id="step1">
+    <div class="section-title">소득 입력</div>
+    <div class="section-desc">세금·4대보험 공제 후<br>실제 통장에 들어오는 연간 금액을 입력하세요.</div>
+
+    <div class="input-group">
+      <label class="input-label">나의 연 실수령액</label>
+      <div class="input-row">
+        <input type="number" id="income_me" inputmode="numeric" placeholder="0" min="0">
+        <span class="input-unit">만원</span>
+      </div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">배우자 연 실수령액 <span>(없으면 0)</span></label>
+      <div class="input-row">
+        <input type="number" id="income_spouse" inputmode="numeric" placeholder="0" min="0">
+        <span class="input-unit">만원</span>
+      </div>
+    </div>
+
+    <button class="primary-btn" onclick="goStep(2)">다음 →</button>
+  </div>
+
+  <!-- Step 2: 고정지출 -->
+  <div id="step2" style="display:none">
+    <div class="section-title">고정지출 입력</div>
+    <div class="section-desc">매달 빠져나가는 고정 비용의<br>연간 합계를 입력하세요.</div>
+
+    <div class="input-group">
+      <label class="input-label">주거비 <span>(월세×12 또는 대출 연상환액)</span></label>
+      <div class="input-row">
+        <input type="number" id="housing" inputmode="numeric" placeholder="0" min="0">
+        <span class="input-unit">만원/년</span>
+      </div>
+    </div>
+    <div class="input-group">
+      <label class="input-label">통신비·보험료·구독료 등 <span>(연합계)</span></label>
+      <div class="input-row">
+        <input type="number" id="other_fixed" inputmode="numeric" placeholder="0" min="0">
+        <span class="input-unit">만원/년</span>
+      </div>
+    </div>
+
+    <div style="font-size:13px; color:#aaa; margin-top:8px; line-height:1.5;">
+      예시: 통신비 월 10만 → 120만원, 보험료 월 20만 → 240만원
+    </div>
+
+    <button class="primary-btn" onclick="goStep(3)">다음 →</button>
+    <button class="secondary-btn" onclick="goStep(1)">← 이전</button>
+  </div>
+
+  <!-- Step 3: 저축 비율 -->
+  <div id="step3" style="display:none">
+    <div class="section-title">저축 목표 설정</div>
+    <div class="section-desc">연 소득 중 저축·투자에 사용할<br>비율을 설정하세요. (권장: 20~30%)</div>
+
+    <div class="slider-group">
+      <div class="slider-header">
+        <span class="input-label" style="margin-bottom:0">저축 목표 비율</span>
+        <span class="slider-value" id="slider-display">20%</span>
+      </div>
+      <input type="range" id="saving_rate" min="10" max="40" value="20" step="5"
+        oninput="updateSlider(this.value)">
+      <div class="slider-hint"><span>10%</span><span>20% 권장</span><span>40%</span></div>
+    </div>
+
+    <button class="primary-btn" onclick="calculate()">결과 보기 →</button>
+    <button class="secondary-btn" onclick="goStep(2)">← 이전</button>
+  </div>
+
+  <!-- 결과 -->
+  <div id="result-screen" style="display:none">
+    <div class="result-summary">
+      <div class="total-label">부부 합산 연 실수령액</div>
+      <div class="total-amount" id="res-total"></div>
+      <div class="total-sub" id="res-total-month"></div>
+    </div>
+
+    <div class="accounts-grid">
+      <div class="account-card acc-fixed">
+        <div class="acc-icon">🏠</div>
+        <div class="acc-name">고정지출 통장</div>
+        <div class="acc-role">주거비·통신비·보험료<br>자동이체 전용</div>
+        <div class="acc-year" id="res-fixed-year"></div>
+        <div class="acc-month" id="res-fixed-month"></div>
+      </div>
+      <div class="account-card acc-save">
+        <div class="acc-icon">📈</div>
+        <div class="acc-name">저축·투자 통장</div>
+        <div class="acc-role">ISA·IRP·청약·투자<br>급여일 즉시 이체</div>
+        <div class="acc-year" id="res-save-year"></div>
+        <div class="acc-month" id="res-save-month"></div>
+      </div>
+      <div class="account-card acc-living">
+        <div class="acc-icon">🛒</div>
+        <div class="acc-name">생활비 통장</div>
+        <div class="acc-role">식비·외식·의류<br>변동 지출 전용</div>
+        <div class="acc-year" id="res-living-year"></div>
+        <div class="acc-month" id="res-living-month"></div>
+      </div>
+      <div class="account-card acc-reserve">
+        <div class="acc-icon">🛡️</div>
+        <div class="acc-name">비상금 통장</div>
+        <div class="acc-role">목표 잔액 유지<br>월 생활비 3개월치</div>
+        <div class="acc-year" id="res-reserve-year"></div>
+        <div class="acc-month" id="res-reserve-month"></div>
+      </div>
+    </div>
+
+    <div class="insight-box" id="insight-box"></div>
+
+    <div class="reserve-info" id="reserve-info"></div>
+
+    <button class="secondary-btn" onclick="restart()">🔄 다시 설계하기</button>
+    <p class="disclaimer">본 계산기는 교육 목적으로 제공되며, 실제 금융 상품과 다를 수 있습니다.</p>
+    <p class="brand">IdentiFi 정원준 CFP · 국가공인 신용상담사</p>
+  </div>
+</div>
+
+<script>
+function fmt(n) {
+  return Math.round(n).toLocaleString('ko-KR') + "만원";
+}
+function fmtM(n) {
+  return "월 " + Math.round(n / 12).toLocaleString('ko-KR') + "만원";
+}
+
+function updateSlider(val) {
+  document.getElementById("slider-display").textContent = val + "%";
+  const pct = (val - 10) / 30 * 100;
+  document.getElementById("saving_rate").style.background =
+    `linear-gradient(90deg, #F5A623 ${pct}%, #e8eef4 ${pct}%)`;
+}
+
+function goStep(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById("step" + i).style.display = "none";
+    const dot = document.getElementById("dot" + i);
+    dot.classList.remove("active","done");
+    if (i < n) { dot.classList.add("done"); document.getElementById("line" + i) && (document.getElementById("line" + i).classList.add("done")); }
+    else if (i === n) dot.classList.add("active");
+  });
+  document.getElementById("result-screen").style.display = "none";
+  document.getElementById("dot4").classList.remove("active","done");
+
+  if (n <= 3) {
+    document.getElementById("step" + n).style.display = "block";
+  }
+}
+
+function calculate() {
+  const me     = parseFloat(document.getElementById("income_me").value) || 0;
+  const spouse = parseFloat(document.getElementById("income_spouse").value) || 0;
+  const housing     = parseFloat(document.getElementById("housing").value) || 0;
+  const otherFixed  = parseFloat(document.getElementById("other_fixed").value) || 0;
+  const rate   = parseFloat(document.getElementById("saving_rate").value) / 100;
+
+  const total      = me + spouse;
+  const fixedTotal = housing + otherFixed;
+  const saveAmt    = total * rate;
+  const remaining  = total - fixedTotal - saveAmt;
+  const livingAmt  = remaining > 0 ? remaining * 0.7 : 0;
+  const reserveTarget = (total - fixedTotal - saveAmt - 0) / 12 * 3; // 월생활비 3개월치
+
+  // 스텝 숨기기
+  [1,2,3].forEach(i => {
+    document.getElementById("step" + i).style.display = "none";
+    document.getElementById("dot" + i).classList.add("done");
+    document.getElementById("dot" + i).classList.remove("active");
+    if (document.getElementById("line" + i)) document.getElementById("line" + i).classList.add("done");
+  });
+  document.getElementById("dot4").classList.add("active");
+  document.getElementById("result-screen").style.display = "block";
+
+  document.getElementById("res-total").textContent = fmt(total);
+  document.getElementById("res-total-month").textContent = "월 평균 " + Math.round(total / 12).toLocaleString('ko-KR') + "만원";
+
+  document.getElementById("res-fixed-year").textContent = fmt(fixedTotal);
+  document.getElementById("res-fixed-month").textContent = fmtM(fixedTotal);
+
+  document.getElementById("res-save-year").textContent = fmt(saveAmt);
+  document.getElementById("res-save-month").textContent = fmtM(saveAmt);
+
+  document.getElementById("res-living-year").textContent = fmt(livingAmt);
+  document.getElementById("res-living-month").textContent = fmtM(livingAmt);
+
+  document.getElementById("res-reserve-year").textContent = "목표 " + fmt(reserveTarget);
+  document.getElementById("res-reserve-month").textContent = "월 생활비 3개월치 기준";
+
+  // 인사이트
+  const savePct = Math.round(rate * 100);
+  document.getElementById("insight-box").innerHTML =
+    `<p>연간 <strong>${fmt(saveAmt)}</strong> 저축하면 10년 후 원금만 <strong>${fmt(saveAmt * 10)}</strong> 이상.<br>` +
+    `매달 <strong>${Math.round(saveAmt / 12).toLocaleString('ko-KR')}만원</strong>씩 저축 통장에 자동이체를 설정하세요.</p>`;
+
+  // 비상금 도달 기간
+  const monthlyToReserve = Math.round(reserveTarget / 12 / 3); // 3개월에 걸쳐 쌓는 경우
+  const monthsNeeded = reserveTarget > 0 ? Math.ceil(reserveTarget / Math.max(monthlyToReserve, 1)) : 0;
+  document.getElementById("reserve-info").innerHTML =
+    `<h4>🛡️ 비상금 목표 달성 계획</h4>` +
+    `<p>목표 잔액: <strong>${fmt(reserveTarget)}</strong><br>` +
+    `매달 <strong>${Math.round(reserveTarget / 12).toLocaleString('ko-KR')}만원</strong>씩 적립하면 <strong>12개월</strong>이면 완성됩니다.<br>` +
+    `비상금이 목표에 도달하면 그 금액을 저축·투자 통장으로 전환하세요.</p>`;
+}
+
+function restart() {
+  document.getElementById("result-screen").style.display = "none";
+  ["income_me","income_spouse","housing","other_fixed"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+  document.getElementById("saving_rate").value = 20;
+  updateSlider(20);
+  document.getElementById("dot4").classList.remove("active","done");
+  goStep(1);
+}
+
+// 초기 슬라이더 색상
+updateSlider(20);
+</script>
+</body>
+</html>
