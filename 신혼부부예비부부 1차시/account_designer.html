@@ -309,14 +309,14 @@
     <div class="input-group">
       <label class="input-label">나의 연 실수령액 <span>(세후)</span></label>
       <div class="input-row">
-        <input type="number" id="income_me" inputmode="numeric" placeholder="0" min="0">
+        <input type="number" id="income_me" inputmode="numeric" placeholder="0" min="0" oninput="updateSaveable()">
         <span class="input-unit">만원/년</span>
       </div>
     </div>
     <div class="input-group">
       <label class="input-label">배우자 연 실수령액 <span>(없으면 0)</span></label>
       <div class="input-row">
-        <input type="number" id="income_spouse" inputmode="numeric" placeholder="0" min="0">
+        <input type="number" id="income_spouse" inputmode="numeric" placeholder="0" min="0" oninput="updateSaveable()">
         <span class="input-unit">만원/년</span>
       </div>
     </div>
@@ -326,19 +326,35 @@
     <div class="input-group">
       <label class="input-label">주거비 <span>(월세×12 또는 대출 연상환액)</span></label>
       <div class="input-row">
-        <input type="number" id="housing" inputmode="numeric" placeholder="0" min="0">
+        <input type="number" id="housing" inputmode="numeric" placeholder="0" min="0" oninput="updateSaveable()">
         <span class="input-unit">만원/년</span>
       </div>
     </div>
     <div class="input-group">
       <label class="input-label">기타 고정지출 <span>(통신비·보험료·구독 연합계)</span></label>
       <div class="input-row">
-        <input type="number" id="other_fixed" inputmode="numeric" placeholder="0" min="0">
+        <input type="number" id="other_fixed" inputmode="numeric" placeholder="0" min="0" oninput="updateSaveable()">
         <span class="input-unit">만원/년</span>
       </div>
     </div>
-    <div style="font-size:12px; color:#aaa; margin-top:4px; line-height:1.5;">
-      예) 통신비 월 10만 → 120, 보험료 월 20만 → 240
+    <div class="input-group">
+      <label class="input-label">변동지출 <span>(식비·외식·의류·여가 연합계)</span></label>
+      <div class="input-row">
+        <input type="number" id="variable_expense" inputmode="numeric" placeholder="0" min="0" oninput="updateSaveable()">
+        <span class="input-unit">만원/년</span>
+      </div>
+    </div>
+    <div style="font-size:12px; color:#aaa; margin-top:-8px; margin-bottom:4px; line-height:1.5;">
+      예) 통신비 월 10만 → 120, 식비 월 50만 → 600
+    </div>
+
+    <!-- 저축가능금액 자동 표시 -->
+    <div class="net-asset-box" id="saveable-box" style="margin-top:12px;">
+      <div>
+        <div class="na-label" style="font-weight:700; color:#1E3A5F;">저축가능금액</div>
+        <div style="font-size:12px; color:#aaa; margin-top:2px;">소득 − 고정지출 − 변동지출</div>
+      </div>
+      <div class="na-value" id="saveable-display">—</div>
     </div>
 
     <button class="primary-btn" onclick="goStep(4)">다음 →</button>
@@ -347,18 +363,26 @@
 
   <!-- Step 4: 저축 금액 -->
   <div id="step4" style="display:none">
-    <div class="section-title">저축 목표</div>
-    <div class="section-desc">연간 저축·투자 목표 금액을 입력하세요.<br>소득 대비 비율을 자동으로 계산합니다.</div>
+    <div class="section-title">저축·투자</div>
+    <div class="section-desc">실제로 저축·투자할 금액을 입력하세요.</div>
+
+    <!-- 저축가능금액 (읽기 전용) -->
+    <div style="background:#e8f4ec; border-radius:12px; padding:12px 16px; margin-bottom:20px;">
+      <div style="font-size:12px; color:#2d6a4f; font-weight:600; margin-bottom:4px;">저축가능금액 (앞 단계 계산)</div>
+      <div style="font-size:22px; font-weight:800; color:#2d6a4f;" id="step4-saveable">—</div>
+      <div style="font-size:12px; color:#5a9a75; margin-top:2px;" id="step4-saveable-month"></div>
+    </div>
 
     <div class="input-group">
-      <label class="input-label">연간 저축 목표 금액</label>
+      <label class="input-label">실제 저축·투자 금액</label>
       <div class="input-row">
-        <input type="number" id="save_amount" inputmode="numeric" placeholder="0" min="0" oninput="updateRateDisplay()">
+        <input type="number" id="save_amount" inputmode="numeric" placeholder="0" min="0" oninput="updateSlackDisplay()">
         <span class="input-unit">만원/년</span>
       </div>
     </div>
 
-    <div class="rate-display" id="rate-display">
+    <!-- 비율 표시 -->
+    <div class="rate-display" id="rate-display" style="margin-bottom:10px;">
       <div>
         <div style="font-size:13px; color:#555;">소득 대비 저축 비율</div>
         <div class="rate-msg" id="rate-msg">금액을 입력하면 비율이 계산됩니다</div>
@@ -366,10 +390,15 @@
       <div class="rate-pct" id="rate-pct">—</div>
     </div>
 
-    <!-- 생활비 음수 경고 -->
-    <div class="error-box" id="error-box">
-      <p>⚠️ 저축 금액이 너무 많습니다</p>
-      <div class="error-sub" id="error-detail"></div>
+    <!-- 추가 여력 / 재조정 안내 -->
+    <div id="slack-ok" style="display:none; background:#e8f4ec; border:2px solid #2d6a4f;
+         border-radius:12px; padding:14px 16px; margin-bottom:4px;">
+      <div style="font-size:13px; font-weight:700; color:#2d6a4f;" id="slack-ok-text"></div>
+    </div>
+    <div id="slack-warn" style="display:none; background:#fff0f0; border:2px solid #e74c3c;
+         border-radius:12px; padding:14px 16px; margin-bottom:4px;">
+      <div style="font-size:13px; font-weight:700; color:#c0392b;">⚠️ 현금수지 마이너스</div>
+      <div style="font-size:13px; color:#e74c3c; margin-top:4px;" id="slack-warn-text"></div>
     </div>
 
     <button class="primary-btn" onclick="calculate()">결과 보기 →</button>
@@ -489,60 +518,84 @@ function fmtM(n) {
   return "월 " + Math.round(n / 12).toLocaleString('ko-KR') + "만원";
 }
 
+function getIncome() {
+  const me     = parseFloat(document.getElementById("income_me").value) || 0;
+  const spouse = parseFloat(document.getElementById("income_spouse").value) || 0;
+  return me + spouse;
+}
+function getFixed() {
+  const housing    = parseFloat(document.getElementById("housing").value) || 0;
+  const otherFixed = parseFloat(document.getElementById("other_fixed").value) || 0;
+  return housing + otherFixed;
+}
+function getSaveable() {
+  const variable = parseFloat(document.getElementById("variable_expense").value) || 0;
+  return getIncome() - getFixed() - variable;
+}
+
 // 순자산 실시간 표시
 function updateNetAsset() {
   const assets = parseFloat(document.getElementById("assets").value) || 0;
   const liab   = parseFloat(document.getElementById("liabilities").value) || 0;
   const net    = assets - liab;
-  const box    = document.getElementById("net-asset-box");
   const disp   = document.getElementById("net-asset-display");
   disp.textContent = fmt(net);
-  if (net < 0) {
-    box.classList.add("negative");
-    disp.style.color = "#c0392b";
-  } else {
-    box.classList.remove("negative");
-    disp.style.color = "#1E3A5F";
-  }
+  disp.style.color = net < 0 ? "#c0392b" : "#1E3A5F";
+  document.getElementById("net-asset-box").classList.toggle("negative", net < 0);
 }
 
-// 저축 비율 실시간 계산
-function updateRateDisplay() {
-  const me     = parseFloat(document.getElementById("income_me").value) || 0;
-  const spouse = parseFloat(document.getElementById("income_spouse").value) || 0;
-  const total  = me + spouse;
-  const save   = parseFloat(document.getElementById("save_amount").value) || 0;
-  const housing    = parseFloat(document.getElementById("housing").value) || 0;
-  const otherFixed = parseFloat(document.getElementById("other_fixed").value) || 0;
-  const fixedTotal = housing + otherFixed;
-  const living = total - fixedTotal - save;
+// Step 3: 저축가능금액 실시간 표시
+function updateSaveable() {
+  const saveable = getSaveable();
+  const disp = document.getElementById("saveable-display");
+  if (getIncome() === 0) {
+    disp.textContent = "—";
+    disp.style.color = "#aaa";
+    return;
+  }
+  disp.textContent = fmt(saveable);
+  disp.style.color = saveable < 0 ? "#c0392b" : "#1E3A5F";
+}
 
-  const errBox = document.getElementById("error-box");
-  const errDetail = document.getElementById("error-detail");
+// Step 4: 추가 여력 / 재조정 표시
+function updateSlackDisplay() {
+  const total    = getIncome();
+  const saveable = getSaveable();
+  const save     = parseFloat(document.getElementById("save_amount").value) || 0;
+  const slack    = saveable - save;
 
+  // 비율
   if (total > 0 && save > 0) {
     const pct = Math.round(save / total * 100);
     document.getElementById("rate-pct").textContent = pct + "%";
-
     let msg = "";
-    if (pct < 10) msg = "소득의 10% 미만 — 저축 비율을 높여보세요";
+    if (pct < 10)      msg = "소득의 10% 미만 — 저축 비율을 높여보세요";
     else if (pct <= 20) msg = "소득의 10~20% — 안정적인 출발입니다";
     else if (pct <= 30) msg = "소득의 21~30% — 권장 범위입니다 👍";
-    else msg = "소득의 30% 초과 — 생활비를 확인하세요";
+    else                msg = "소득의 30% 초과 — 현금흐름을 확인하세요";
     document.getElementById("rate-msg").textContent = msg;
-
-    if (living < 0) {
-      errBox.style.display = "block";
-      errDetail.textContent =
-        "고정지출 " + fmt(fixedTotal) + " + 저축 " + fmt(save) +
-        " = " + fmt(fixedTotal + save) + " — 소득(" + fmt(total) + ")을 초과합니다. 저축 금액을 줄여주세요.";
-    } else {
-      errBox.style.display = "none";
-    }
   } else {
     document.getElementById("rate-pct").textContent = "—";
     document.getElementById("rate-msg").textContent = "금액을 입력하면 비율이 계산됩니다";
-    errBox.style.display = "none";
+  }
+
+  // 여력 / 경고
+  const okBox   = document.getElementById("slack-ok");
+  const warnBox = document.getElementById("slack-warn");
+  if (save === 0) {
+    okBox.style.display = "none";
+    warnBox.style.display = "none";
+  } else if (slack >= 0) {
+    okBox.style.display = "block";
+    warnBox.style.display = "none";
+    document.getElementById("slack-ok-text").textContent =
+      "✅ 추가 저축 여력 " + fmt(slack) + " (월 " + Math.round(slack/12).toLocaleString('ko-KR') + "만원)";
+  } else {
+    okBox.style.display = "none";
+    warnBox.style.display = "block";
+    document.getElementById("slack-warn-text").textContent =
+      "저축·투자 " + fmt(save) + "이 저축가능금액(" + fmt(saveable) + ")을 " +
+      fmt(Math.abs(slack)) + " 초과합니다. 저축가능금액 내에서 재조정하세요.";
   }
 }
 
@@ -566,42 +619,46 @@ function goStep(n) {
   document.getElementById("line4").classList.remove("done");
   if (n <= 4) {
     document.getElementById("step" + n).style.display = "block";
-    if (n === 4) updateRateDisplay();
+    if (n === 4) {
+      // Step 4 진입 시 저축가능금액 표시 업데이트
+      const saveable = getSaveable();
+      document.getElementById("step4-saveable").textContent = fmt(saveable);
+      document.getElementById("step4-saveable-month").textContent = fmtM(saveable);
+      document.getElementById("step4-saveable").style.color = saveable < 0 ? "#c0392b" : "#2d6a4f";
+      updateSlackDisplay();
+    }
   }
 }
 
 // 계산
 function calculate() {
-  const me     = parseFloat(document.getElementById("income_me").value) || 0;
-  const spouse = parseFloat(document.getElementById("income_spouse").value) || 0;
-  const total  = me + spouse;
-  const housing    = parseFloat(document.getElementById("housing").value) || 0;
-  const otherFixed = parseFloat(document.getElementById("other_fixed").value) || 0;
-  const fixedTotal = housing + otherFixed;
+  const total      = getIncome();
+  const fixedTotal = getFixed();
+  const variable   = parseFloat(document.getElementById("variable_expense").value) || 0;
+  const saveable   = getSaveable();
   const saveAmt    = parseFloat(document.getElementById("save_amount").value) || 0;
-  const living     = total - fixedTotal - saveAmt;
+  const slack      = saveable - saveAmt;
 
-  // 생활비 음수 차단
-  if (living < 0) {
-    document.getElementById("error-box").style.display = "block";
-    document.getElementById("error-detail").textContent =
-      "고정지출 " + fmt(fixedTotal) + " + 저축 " + fmt(saveAmt) +
-      " = " + fmt(fixedTotal + saveAmt) + " — 소득(" + fmt(total) + ")을 초과합니다. 저축 금액을 줄여주세요.";
+  // 현금수지 마이너스 차단
+  if (slack < 0) {
+    document.getElementById("slack-warn").style.display = "block";
+    document.getElementById("slack-warn-text").textContent =
+      "저축·투자 " + fmt(saveAmt) + "이 저축가능금액(" + fmt(saveable) + ")을 " +
+      fmt(Math.abs(slack)) + " 초과합니다. 저축가능금액 내에서 재조정하세요.";
     return;
   }
 
-  const assets = parseFloat(document.getElementById("assets").value) || 0;
-  const liab   = parseFloat(document.getElementById("liabilities").value) || 0;
+  const assets   = parseFloat(document.getElementById("assets").value) || 0;
+  const liab     = parseFloat(document.getElementById("liabilities").value) || 0;
   const netAsset = assets - liab;
 
   const goalName   = document.getElementById("goal_name").value || "재무목표";
   const goalYears  = parseFloat(document.getElementById("goal_years").value) || 0;
   const goalAmount = parseFloat(document.getElementById("goal_amount").value) || 0;
 
-  const saveAccum  = saveAmt * goalYears;
+  const saveAccum   = saveAmt * goalYears;
   const futureAsset = netAsset + saveAccum;
-  const reserveTarget = living / 12 * 3;
-  const livingM = Math.round(living / 12);
+  const reserveTarget = variable / 12 * 3;
 
   // 스텝 숨기기
   [1,2,3,4].forEach(i => {
@@ -615,13 +672,13 @@ function calculate() {
   document.getElementById("result-screen").style.display = "block";
 
   // 재무목표
-  document.getElementById("res-goal-name").textContent   = "🎯 " + goalName;
-  document.getElementById("res-goal-amount").textContent = fmt(goalAmount);
-  document.getElementById("res-goal-years").textContent  = goalYears + "년 후";
-  document.getElementById("res-net-asset").textContent   = fmt(netAsset);
-  document.getElementById("res-save-accum").textContent  = fmt(saveAccum);
-  document.getElementById("res-save-yr").textContent     = fmt(saveAmt);
-  document.getElementById("res-goal-yr-txt").textContent = goalYears;
+  document.getElementById("res-goal-name").textContent    = "🎯 " + goalName;
+  document.getElementById("res-goal-amount").textContent  = fmt(goalAmount);
+  document.getElementById("res-goal-years").textContent   = goalYears + "년 후";
+  document.getElementById("res-net-asset").textContent    = fmt(netAsset);
+  document.getElementById("res-save-accum").textContent   = fmt(saveAccum);
+  document.getElementById("res-save-yr").textContent      = fmt(saveAmt);
+  document.getElementById("res-goal-yr-txt").textContent  = goalYears;
   document.getElementById("res-future-asset").textContent = fmt(futureAsset);
 
   const verdict = document.getElementById("goal-verdict");
@@ -645,35 +702,41 @@ function calculate() {
   netEl.className = "na-num" + (netAsset < 0 ? " neg" : "");
 
   // 통장 구조
-  document.getElementById("res-fixed-year").textContent  = fmt(fixedTotal);
-  document.getElementById("res-fixed-month").textContent = fmtM(fixedTotal);
-  document.getElementById("res-save-year").textContent   = fmt(saveAmt);
-  document.getElementById("res-save-month").textContent  = fmtM(saveAmt);
-  document.getElementById("res-living-year").textContent  = fmt(living);
-  document.getElementById("res-living-month").textContent = fmtM(living);
+  document.getElementById("res-fixed-year").textContent   = fmt(fixedTotal);
+  document.getElementById("res-fixed-month").textContent  = fmtM(fixedTotal);
+  document.getElementById("res-save-year").textContent    = fmt(saveAmt);
+  document.getElementById("res-save-month").textContent   = fmtM(saveAmt);
+  document.getElementById("res-living-year").textContent  = fmt(variable);
+  document.getElementById("res-living-month").textContent = fmtM(variable);
   document.getElementById("res-reserve-target").textContent = "목표 " + fmt(reserveTarget);
-  document.getElementById("res-reserve-period").textContent = "월 생활비 3개월치";
+  document.getElementById("res-reserve-period").textContent = "월 변동지출 3개월치";
 
   // 인사이트
   const savePct = total > 0 ? Math.round(saveAmt / total * 100) : 0;
+  const slackTxt = slack > 0
+    ? "추가 저축 여력이 <strong>" + fmt(slack) + "</strong> 남아 있습니다."
+    : "저축가능금액을 모두 저축합니다.";
   document.getElementById("insight-box").innerHTML =
-    `<p>연간 <strong>${fmt(saveAmt)}</strong>(소득의 ${savePct}%)를 저축합니다.<br>` +
-    `비상금 목표 <strong>${fmt(reserveTarget)}</strong>는 매달 <strong>${Math.round(reserveTarget/12).toLocaleString('ko-KR')}만원</strong>씩 적립하면 12개월 완성.<br>` +
-    `구체적인 저축·투자 시뮬레이션은 <strong>identifi.co.kr/#tools</strong>에서 확인하세요.</p>`;
+    `<p>연간 <strong>${fmt(saveAmt)}</strong>(소득의 ${savePct}%)를 저축합니다. ${slackTxt}<br>` +
+    `비상금 목표 <strong>${fmt(reserveTarget)}</strong>는 매달 <strong>${Math.round(reserveTarget/12).toLocaleString('ko-KR')}만원</strong>씩 적립하면 12개월 완성.</p>`;
 }
 
 function restart() {
   document.getElementById("result-screen").style.display = "none";
   ["goal_name","goal_years","goal_amount","assets","liabilities",
-   "income_me","income_spouse","housing","other_fixed","save_amount"].forEach(id => {
+   "income_me","income_spouse","housing","other_fixed","variable_expense","save_amount"].forEach(id => {
     document.getElementById(id).value = "";
   });
   document.getElementById("net-asset-display").textContent = "0만원";
   document.getElementById("net-asset-display").style.color = "#1E3A5F";
   document.getElementById("net-asset-box").classList.remove("negative");
+  document.getElementById("saveable-display").textContent = "—";
+  document.getElementById("step4-saveable").textContent = "—";
+  document.getElementById("step4-saveable-month").textContent = "";
   document.getElementById("rate-pct").textContent = "—";
   document.getElementById("rate-msg").textContent = "금액을 입력하면 비율이 계산됩니다";
-  document.getElementById("error-box").style.display = "none";
+  document.getElementById("slack-ok").style.display = "none";
+  document.getElementById("slack-warn").style.display = "none";
   [1,2,3,4].forEach(i => {
     document.getElementById("dot" + i).classList.remove("active","done");
     const line = document.getElementById("line" + i);
